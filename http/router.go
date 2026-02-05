@@ -1,6 +1,7 @@
 package http
 
 import (
+	"strings"
 	"tickets/db"
 
 	libHttp "github.com/ThreeDotsLabs/go-event-driven/v2/common/http"
@@ -11,8 +12,16 @@ import (
 )
 
 func NewHttpRouter(eventBus *cqrs.EventBus, commandBus *cqrs.CommandBus, tickets db.TicketRepository, shows db.ShowRepository, bookings db.BookingRepository, opsBookings db.OpsBookingReadModel) *echo.Echo {
-	e := libHttp.NewEcho()
+	e := echo.New()
+	e.HideBanner = true
+	e.HTTPErrorHandler = libHttp.HandleError
 
+	e.Use(RequestIDMiddleware())
+	e.Use(BodyDumpMiddleware(func(c echo.Context) bool {
+		return strings.HasPrefix(c.Request().URL.Path, "/static") || c.Request().URL.Path == "/" || !strings.HasPrefix(c.Request().URL.Path, "/api")
+	}))
+	e.Use(RequestLoggerMiddleware())
+	e.Use(CorrelationIDMiddleware())
 	e.Use(otelecho.Middleware("tickets"))
 	e.Use(TraceIDMiddleware())
 
@@ -25,17 +34,21 @@ func NewHttpRouter(eventBus *cqrs.EventBus, commandBus *cqrs.CommandBus, tickets
 		opsBookings: opsBookings,
 	}
 
-	e.POST("/tickets-status", handler.PostTicketsStatus)
-	e.GET("/tickets", handler.GetTickets)
-	e.POST("/shows", handler.PostShows)
-	e.POST("/book-tickets", handler.PostBookTickets)
-	e.PUT("/ticket-refund/:ticket_id", handler.PutTicketRefund)
+	api := e.Group("/api")
+	api.POST("/tickets-status", handler.PostTicketsStatus)
+	api.GET("/tickets", handler.GetTickets)
+	api.POST("/shows", handler.PostShows)
+	api.POST("/book-tickets", handler.PostBookTickets)
+	api.PUT("/ticket-refund/:ticket_id", handler.PutTicketRefund)
+
+	api.GET("/ops/bookings", handler.GetOpsBookings)
+	api.GET("/ops/bookings/:id", handler.GetOpsBookingByID)
+
 	e.GET("/health", handler.GetHealthCheck)
-
-	e.GET("/ops/bookings", handler.GetOpsBookings)
-	e.GET("/ops/bookings/:id", handler.GetOpsBookingByID)
-
 	e.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+
+	frontendHandler := newFrontendHandler()
+	e.GET("/*", frontendHandler.GetStaticFiles)
 
 	return e
 }
