@@ -1,6 +1,9 @@
 name: Release
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       version:
@@ -11,6 +14,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  VERSION: ${{ inputs.version || github.ref_name }}
 
 jobs:
   lint:
@@ -101,7 +105,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ inputs.version }}
+            type=raw,value=${{ env.VERSION }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
@@ -128,7 +132,7 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd /home/thanhdaon/infra
-            export TAG=${{ inputs.version }}
+            export TAG=${{ env.VERSION }}
             docker compose pull tickets
             docker compose up -d tickets
 
