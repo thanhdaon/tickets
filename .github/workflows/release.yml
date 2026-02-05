@@ -69,7 +69,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USERNAME }}
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
-            cd /root/infra
+            cd /home/thanhdaon/infra
             export TAG=${{ inputs.version }}
             docker compose pull tickets
             docker compose up -d tickets
