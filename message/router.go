@@ -60,7 +60,7 @@ func NewRouter(
 	eventsSplitterSubscriber message.Subscriber,
 	dataLakeSubscriber message.Subscriber,
 	dataLake DataLake,
-) *Router {
+) (*Router, error) {
 	router := message.NewDefaultRouter(logger)
 	outbox.AddForwarderHandler(subscriber, publisher, router, logger)
 
@@ -107,28 +107,54 @@ func NewRouter(
 		panic(err)
 	}
 
-	ep.AddHandler(cqrs.NewEventHandler("StoreTicket", eventHandlers.StoreTicket))
-	ep.AddHandler(cqrs.NewEventHandler("AppendToTracker", eventHandlers.AppendToTracker))
-	ep.AddHandler(cqrs.NewEventHandler("PrintTicket", eventHandlers.PrintTicket))
-	ep.AddHandler(cqrs.NewEventHandler("TicketRefundToSheet", eventHandlers.TicketRefundToSheet))
-	ep.AddHandler(cqrs.NewEventHandler("IssueReceipt", eventHandlers.IssueReceipt))
-	ep.AddHandler(cqrs.NewEventHandler("RemoveCanceledTicket", eventHandlers.RemoveCanceledTicket))
-	ep.AddHandler(cqrs.NewEventHandler("BookPlaceInDeadNation", eventHandlers.BookPlaceInDeadNation))
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("StoreTicket", eventHandlers.StoreTicket)); err != nil {
+		return nil, fmt.Errorf("failed to add StoreTicket handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("AppendToTracker", eventHandlers.AppendToTracker)); err != nil {
+		return nil, fmt.Errorf("failed to add AppendToTracker handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("PrintTicket", eventHandlers.PrintTicket)); err != nil {
+		return nil, fmt.Errorf("failed to add PrintTicket handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("TicketRefundToSheet", eventHandlers.TicketRefundToSheet)); err != nil {
+		return nil, fmt.Errorf("failed to add TicketRefundToSheet handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("IssueReceipt", eventHandlers.IssueReceipt)); err != nil {
+		return nil, fmt.Errorf("failed to add IssueReceipt handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("RemoveCanceledTicket", eventHandlers.RemoveCanceledTicket)); err != nil {
+		return nil, fmt.Errorf("failed to add RemoveCanceledTicket handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("BookPlaceInDeadNation", eventHandlers.BookPlaceInDeadNation)); err != nil {
+		return nil, fmt.Errorf("failed to add BookPlaceInDeadNation handler: %w", err)
+	}
 
-	ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnBookingMade", opsBookings.OnBookingMade))
-	ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketBookingConfirmed", opsBookings.OnTicketBookingConfirmed))
-	ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketRefunded", opsBookings.OnTicketRefunded))
-	ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketPrinted", opsBookings.OnTicketPrinted))
-	ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketReceiptIssued", opsBookings.OnTicketReceiptIssued))
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnBookingMade", opsBookings.OnBookingMade)); err != nil {
+		return nil, fmt.Errorf("failed to add OnBookingMade handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketBookingConfirmed", opsBookings.OnTicketBookingConfirmed)); err != nil {
+		return nil, fmt.Errorf("failed to add OnTicketBookingConfirmed handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketRefunded", opsBookings.OnTicketRefunded)); err != nil {
+		return nil, fmt.Errorf("failed to add OnTicketRefunded handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketPrinted", opsBookings.OnTicketPrinted)); err != nil {
+		return nil, fmt.Errorf("failed to add OnTicketPrinted handler: %w", err)
+	}
+	if _, err := ep.AddHandler(cqrs.NewEventHandler("ops_read_model.OnTicketReceiptIssued", opsBookings.OnTicketReceiptIssued)); err != nil {
+		return nil, fmt.Errorf("failed to add OnTicketReceiptIssued handler: %w", err)
+	}
 
 	cp, err := cqrs.NewCommandProcessorWithConfig(router, commandProcessorConfig)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create command processor: %w", err)
 	}
 
-	cp.AddHandler(cqrs.NewCommandHandler("RefundTicket", commandHandlers.RefundTicketHandler))
+	if _, err := cp.AddHandler(cqrs.NewCommandHandler("RefundTicket", commandHandlers.RefundTicketHandler)); err != nil {
+		return nil, fmt.Errorf("failed to add RefundTicket handler: %w", err)
+	}
 
-	return &Router{router}
+	return &Router{router}, nil
 }
 
 func (r Router) Run(ctx context.Context) error {

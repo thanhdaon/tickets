@@ -30,7 +30,7 @@ func waitForHttpServer(t *testing.T) {
 		if !assert.NoError(t, err) {
 			return
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if assert.Less(t, resp.StatusCode, 300, "API not ready, http status: %d", resp.StatusCode) {
 			return
@@ -79,7 +79,7 @@ func sendTicketRefund(t *testing.T, ticketID string) {
 	resp, err := http.DefaultClient.Do(httpReq)
 	require.NoError(t, err)
 	require.Equal(t, http.StatusAccepted, resp.StatusCode)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 }
 
 func assertReceiptForTicketIssued(t *testing.T, receiptsService *adapters.ReceiptsServiceStub, ticket ticketsHttp.TicketStatusRequest) {
@@ -210,35 +210,6 @@ func assertTicketPrinted(t *testing.T, fileAPI *adapters.FilesAPIStub, ticketID 
 	assert.EventuallyWithT(t, condition, 10*time.Second, 100*time.Millisecond)
 }
 
-func assertDeadNationBookingMade(t *testing.T, deadNation *adapters.DeadNationStub, bookingID, deadNationEventID string, numberOfTickets int, customerEmail string) {
-	t.Helper()
-
-	parsedBookingID, err := uuid.Parse(bookingID)
-	require.NoError(t, err, "invalid booking ID")
-
-	parsedDeadNationEventID, err := uuid.Parse(deadNationEventID)
-	require.NoError(t, err, "invalid dead nation event ID")
-
-	condition := func(t *assert.CollectT) {
-		bookings := deadNation.BookingsCount()
-		if !assert.Greater(t, bookings, 0, "no bookings made to Dead Nation") {
-			return
-		}
-
-		booking, ok := deadNation.FindBookingByBookingID(bookingID)
-		if !assert.True(t, ok, "booking with ID %s not found in Dead Nation stub", bookingID) {
-			return
-		}
-
-		assert.Equal(t, parsedBookingID, booking.BookingID, "booking ID should match")
-		assert.Equal(t, parsedDeadNationEventID, booking.DeadNationEventID, "dead nation event ID should match")
-		assert.Equal(t, numberOfTickets, booking.NumberOfTickets, "number of tickets should match")
-		assert.Equal(t, customerEmail, booking.CustomerEmail, "customer email should match")
-	}
-
-	assert.EventuallyWithT(t, condition, 10*time.Second, 100*time.Millisecond)
-}
-
 func createShow(t *testing.T, db *sqlx.DB, showID uuid.UUID, deadNationID uuid.UUID, numberOfTickets int, title string) {
 	t.Helper()
 
@@ -276,22 +247,9 @@ func bookTickets(t *testing.T, showID uuid.UUID, numberOfTickets int, customerEm
 
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	return resp.StatusCode, body
-}
-
-func assertBookingCreated(t *testing.T, db *sqlx.DB, bookingID uuid.UUID, showID uuid.UUID, numberOfTickets int, customerEmail string) {
-	t.Helper()
-
-	countQuery := `
-		SELECT COUNT(*) FROM bookings
-		WHERE booking_id = $1 AND show_id = $2 AND number_of_tickets = $3 AND customer_email = $4
-	`
-	var count int
-	err := db.Get(&count, countQuery, bookingID, showID, numberOfTickets, customerEmail)
-	require.NoError(t, err)
-	assert.Equal(t, 1, count, "booking should exist in database")
 }
 
 func getBookedTicketsCount(t *testing.T, db *sqlx.DB, showID uuid.UUID) int {

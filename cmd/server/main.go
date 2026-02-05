@@ -27,8 +27,13 @@ func main() {
 	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()
 
+	logger := slog.Default()
 	rdb := message.NewRedisClient(os.Getenv("REDIS_ADDR"))
-	defer rdb.Close()
+	defer func() {
+		if err := rdb.Close(); err != nil {
+			logger.Error("failed to close redis client", "error", err)
+		}
+	}()
 
 	traceDB, err := otelsql.Open("postgres", os.Getenv("POSTGRES_URL"),
 		otelsql.WithAttributes(semconv.DBSystemPostgreSQL),
@@ -37,7 +42,11 @@ func main() {
 		panic(err)
 	}
 	db := sqlx.NewDb(traceDB, "postgres")
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("failed to close database", "error", err)
+		}
+	}()
 
 	traceHTTPClient := &http.Client{
 		Transport: otelhttp.NewTransport(
@@ -66,7 +75,10 @@ func main() {
 	fileAPI := adapters.NewFilesAPIClient(apiClients)
 	deadnationAPI := adapters.NewDeadNationClient(apiClients)
 
-	svc := service.New(db, rdb, spreadsheetsAPI, receiptsService, paymentsService, fileAPI, deadnationAPI)
+	svc, err := service.New(db, rdb, spreadsheetsAPI, receiptsService, paymentsService, fileAPI, deadnationAPI)
+	if err != nil {
+		panic(err)
+	}
 	if err := svc.Run(ctx); err != nil {
 		panic(err)
 	}

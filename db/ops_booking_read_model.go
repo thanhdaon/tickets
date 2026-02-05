@@ -178,7 +178,7 @@ func (r OpsBookingReadModel) updateByTicketID(
 				return fmt.Errorf("could not find read model: %w", err)
 			}
 
-			ticket, _ := rm.Tickets[ticketID]
+			ticket := rm.Tickets[ticketID]
 
 			updatedRm, err := updateFunc(ticket)
 			if err != nil {

@@ -42,8 +42,12 @@ func SetupComponentTest(t *testing.T) *TestFixtures {
 	deadNationStub := adapters.NewDeadNationStub()
 
 	go func() {
-		svc := service.New(db, rdb, spreadsheetsAPI, receiptsService, paymentsService, fileAPI, deadNationStub)
-		err := svc.Run(ctx)
+		svc, err := service.New(db, rdb, spreadsheetsAPI, receiptsService, paymentsService, fileAPI, deadNationStub)
+		if err != nil {
+			t.Errorf("failed to create service: %v", err)
+			return
+		}
+		err = svc.Run(ctx)
 		assert.NoError(t, err)
 	}()
 

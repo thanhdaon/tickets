@@ -40,7 +40,7 @@ func New(
 	receiptsService message.ReceiptsService,
 	paymentsService message.PaymentsService,
 	fileAPI message.FileAPI,
-	deadNationAPI event.DeadNationAPI) Service {
+	deadNationAPI event.DeadNationAPI) (Service, error) {
 	traceProvider := observability.ConfigureTraceProvider()
 
 	logger := watermill.NewSlogLogger(slog.Default())
@@ -71,7 +71,10 @@ func New(
 	dataLake := db.NewDataLake(sqldb)
 
 	echoRouter := ticketsHttp.NewHttpRouter(eventBus, commandBus, tickets, shows, bookings, opsBookings)
-	msgsRouter := message.NewRouter(subscriber, publisher, epConfig, cpConfig, eHandlers, cHandlers, opsBookings, logger, sqldb, eventsSplitterSubscriber, dataLakeSubscriber, dataLake)
+	msgsRouter, err := message.NewRouter(subscriber, publisher, epConfig, cpConfig, eHandlers, cHandlers, opsBookings, logger, sqldb, eventsSplitterSubscriber, dataLakeSubscriber, dataLake)
+	if err != nil {
+		return Service{}, fmt.Errorf("failed to create message router: %w", err)
+	}
 
 	return Service{
 		db:            sqldb,
@@ -80,7 +83,7 @@ func New(
 		dataLake:      dataLake,
 		opsBookings:   opsBookings,
 		traceProvider: traceProvider,
-	}
+	}, nil
 }
 
 func (s Service) Run(ctx context.Context) error {
