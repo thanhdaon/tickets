@@ -52,8 +52,8 @@ func useMiddlewares(router *message.Router) {
 	router.AddMiddleware(middleware.Recoverer)
 
 	router.AddMiddleware(middleware.Retry{
-		MaxRetries:      10,
-		InitialInterval: time.Millisecond * 100,
+		MaxRetries:      3,
+		InitialInterval: time.Millisecond * 400,
 		MaxInterval:     time.Second,
 		Multiplier:      2,
 		Logger:          router.Logger(),
