@@ -21,6 +21,15 @@ type PostShowsResponse struct {
 	ShowID uuid.UUID `json:"show_id"`
 }
 
+func (h Handler) GetShows(c echo.Context) error {
+	shows, err := h.shows.FindAll(c.Request().Context())
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, shows)
+}
+
 func (h Handler) PostShows(c echo.Context) error {
 	var request PostShowsRequest
 

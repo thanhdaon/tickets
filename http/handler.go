@@ -18,6 +18,7 @@ type Handler struct {
 
 type ShowRepository interface {
 	AddShow(ctx context.Context, show entities.Show) error
+	FindAll(ctx context.Context) ([]entities.Show, error)
 }
 
 type TicketRepository interface {

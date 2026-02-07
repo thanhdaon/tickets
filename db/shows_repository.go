@@ -35,6 +35,16 @@ func (s ShowRepository) AddShow(ctx context.Context, show entities.Show) error {
 	return nil
 }
 
+func (s ShowRepository) FindAll(ctx context.Context) ([]entities.Show, error) {
+	var shows []entities.Show
+	err := s.db.SelectContext(ctx, &shows, `SELECT * FROM shows ORDER BY start_time`)
+	if err != nil {
+		return nil, fmt.Errorf("could not find shows: %w", err)
+	}
+
+	return shows, nil
+}
+
 func (s ShowRepository) ShowByID(ctx context.Context, showID uuid.UUID) (entities.Show, error) {
 	var show entities.Show
 	err := s.db.GetContext(ctx, &show, `SELECT * FROM shows WHERE show_id = $1`, showID)

@@ -43,6 +43,7 @@ func NewHttpRouter(eventBus *cqrs.EventBus, commandBus *cqrs.CommandBus, tickets
 	api := e.Group("/api")
 	api.POST("/tickets-status", handler.PostTicketsStatus)
 	api.GET("/tickets", handler.GetTickets)
+	api.GET("/shows", handler.GetShows)
 	api.POST("/shows", handler.PostShows)
 	api.POST("/book-tickets", handler.PostBookTickets)
 	api.PUT("/ticket-refund/:ticket_id", handler.PutTicketRefund)
