@@ -12,3 +12,9 @@ type IssueReceiptResponse struct {
 	ReceiptNumber string
 	IssuedAt      time.Time
 }
+
+type VoidReceipt struct {
+	TicketID       string
+	Reason         string
+	IdempotencyKey string
+}

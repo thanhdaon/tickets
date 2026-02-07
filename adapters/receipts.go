@@ -65,13 +65,12 @@ func (c ReceiptsServiceClient) VoidReceipt(ctx context.Context, ticketID, idempo
 	})
 
 	if err != nil {
-		return fmt.Errorf("failed to void receipt: %w", err)
+		return fmt.Errorf("failed to post void receipt: %w", err)
 	}
 
-	switch resp.StatusCode() {
-	case http.StatusOK, http.StatusCreated:
-		return nil
-	default:
-		return fmt.Errorf("unexpected status code for PUT receipts-api/receipts/void: %d", resp.StatusCode())
+	if resp.StatusCode() != http.StatusOK {
+		return fmt.Errorf("unexpected status code for POST receipts-api/receipts/void: %d", resp.StatusCode())
 	}
+
+	return nil
 }
