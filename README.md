@@ -2,6 +2,12 @@
 
 A Go-based event ticketing system demonstrating event-driven architecture patterns including CQRS, Event Sourcing, and the Outbox Pattern.
 
+## Live Demo
+
+- **Application**: https://tickets.previewhub.app/
+- **Container Logs**: https://dozzle.previewhub.app/
+- **Jaeger Dashboard**: https://jaeger.previewhub.app/
+
 ## Features
 
 - **Ticket Management** - Create, track, and manage event tickets
@@ -10,6 +16,24 @@ A Go-based event ticketing system demonstrating event-driven architecture patter
 - **Refund Processing** - Handle ticket cancellations with receipt voiding and payment refunds
 - **Event-Driven Architecture** - Loosely coupled components communicating via events and commands
 - **Observability** - Distributed tracing, metrics, and health checks
+
+## Demo Screenshots
+
+### Shows Management
+![Shows](./images/shows.png)
+*Create and manage shows with Dead Nation integration*
+
+### Ticket Booking
+![Book Tickets](./images/book-tickets.png)
+*Book tickets for available shows*
+
+### Tickets Overview
+![Tickets](./images/tickets.png)
+*View and manage tickets*
+
+### Operations Report
+![Ops Report](./images/ops-report.png)
+*Monitor bookings and operations with detailed reporting*
 
 ## Architecture
 
@@ -173,7 +197,8 @@ Tests cover:
 
 ### Jaeger (Tracing)
 
-Access the Jaeger UI at `http://localhost:16686` to view distributed traces.
+- **Local**: Access the Jaeger UI at `http://localhost:16686` to view distributed traces
+- **Live Demo**: https://jaeger.previewhub.app/
 
 ### Prometheus (Metrics)
 
@@ -181,12 +206,13 @@ Access Prometheus at `http://localhost:9090`. Metrics are exposed at `/metrics`.
 
 ## Docker Services
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Application | 8080 | Main application |
-| Gateway | 8888 | Event-driven gateway |
-| PostgreSQL | 5432 | Database |
-| Redis | 6379 | Message broker & cache |
-| Prometheus | 9090 | Metrics collection |
-| Jaeger | 16686 | Tracing UI |
-| Jaeger OTLP | 4318 | OTLP collector |
+| Service | Port | Description | Live Demo |
+|---------|------|-------------|-----------|
+| Application | 8080 | Main application | [tickets.previewhub.app](https://tickets.previewhub.app/) |
+| Gateway | 8888 | Event-driven gateway | - |
+| PostgreSQL | 5432 | Database | - |
+| Redis | 6379 | Message broker & cache | - |
+| Prometheus | 9090 | Metrics collection | - |
+| Jaeger | 16686 | Tracing UI | [jaeger.previewhub.app](https://jaeger.previewhub.app/) |
+| Jaeger OTLP | 4318 | OTLP collector | - |
+| Dozzle | - | Container logs viewer | [dozzle.previewhub.app](https://dozzle.previewhub.app/) |
